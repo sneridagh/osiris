@@ -13,7 +13,7 @@ import pymongo
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-    whoconfig_file = 'who.ini'
+    whoconfig_file = settings['whoconfig_file']
     identifier_id = 'auth_tkt'
     authn_policy = WhoV2AuthenticationPolicy(whoconfig_file, identifier_id)
     authz_policy = ACLAuthorizationPolicy()

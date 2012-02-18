@@ -16,8 +16,8 @@ def token_endpoint(request):
     endpoint is used with every authorization grant except for the
     implicit grant type (since an access token is issued directly).
     """
-    #request = OAuth2Request(request)
-    import ipdb;ipdb.set_trace()
+    # import ipdb;ipdb.set_trace()
+    expires_in = request.registry.settings.get('oauth2.tokenexpiry', 0)
 
     grant_type = request.params.get('grant_type')
 
@@ -35,9 +35,11 @@ def token_endpoint(request):
         scope = request.params.get('scope', '')  # Optional
         username = request.params.get('username', None)
         password = request.params.get('password', None)
-        if username is None or password is None:
-            return OAuth2ErrorHandler.error_invalid_request()
-
-        return password_authorization(request, username, password, scope)
+        if username is None:
+            return OAuth2ErrorHandler.error_invalid_request('Required paramer "username" not found in the request')
+        elif password is None:
+            return OAuth2ErrorHandler.error_invalid_request('Required paramer "password" not found in the request')
+        else:
+            return password_authorization(request, username, password, scope, expires_in)
     else:
         return OAuth2ErrorHandler.error_unsupported_grant_type()

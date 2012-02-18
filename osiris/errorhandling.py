@@ -1,10 +1,34 @@
-from pyramid.httpexceptions import HTTPUnauthorized
+from pyramid.httpexceptions import HTTPUnauthorized, HTTPBadRequest, HTTPNotImplemented
+from pyramid.response import Response
+
+import json
+
+
+class JSONHTTPUnauthorized(HTTPUnauthorized):
+
+    def __init__(self, error):
+        Response.__init__(self, json.dumps(error), status=self.code)
+        self.content_type = 'application/json'
+
+
+class JSONHTTPBadRequest(HTTPBadRequest):
+
+    def __init__(self, error):
+        Response.__init__(self, json.dumps(error), status=self.code)
+        self.content_type = 'application/json'
+
+
+class JSONHTTPNotImplemented(HTTPNotImplemented):
+
+    def __init__(self, error):
+        Response.__init__(self, json.dumps(error), status=self.code)
+        self.content_type = 'application/json'
 
 
 class OAuth2ErrorHandler(object):
 
     @staticmethod
-    def error_invalid_request():
+    def error_invalid_request(error_description=""):
         """
         The request is missing a required parameter, includes an
         unsupported parameter or parameter value, repeats a
@@ -13,7 +37,7 @@ class OAuth2ErrorHandler(object):
         otherwise malformed.
         """
         return dict(error='invalid_request',
-                    error_description="")
+                    error_description=error_description)
 
     @staticmethod
     def error_invalid_client():
@@ -44,13 +68,15 @@ class OAuth2ErrorHandler(object):
                     error_description="")
 
     @staticmethod
-    def error_unauthorized_user():
+    def error_unauthorized_client():
         """
         The authenticated user is not authorized to use this
         authorization grant type.
         """
-        return dict(error='unauthorized_client',
-                    error_description="")
+        error_response = dict(error='unauthorized_client',
+                              error_description="")
+
+        return JSONHTTPUnauthorized(error_response)
 
     @staticmethod
     def error_unsupported_grant_type():
@@ -58,8 +84,10 @@ class OAuth2ErrorHandler(object):
         The authorization grant type is not supported by the
         authorization server.
         """
-        return dict(error='unsupported_grant_type',
-                    error_description="")
+        error_response = dict(error='unsupported_grant_type',
+                              error_description="")
+
+        return JSONHTTPNotImplemented(error_response)
 
     @staticmethod
     def error_invalid_scope():

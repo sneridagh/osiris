@@ -3,7 +3,7 @@ from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.resources import issue_token
 
 
-def password_authorization(request, username, password, scope):
+def password_authorization(request, username, password, scope, expires_in):
 
     policy = request.registry.queryUtility(IAuthenticationPolicy)
     authapi = policy._getAPI(request)
@@ -12,6 +12,6 @@ def password_authorization(request, username, password, scope):
     identity, headers = authapi.login(credentials)
 
     if not identity:
-        return OAuth2ErrorHandler.error_unauthorized_user()
+        return OAuth2ErrorHandler.error_unauthorized_client()
     else:
-        issue_token(request, username, password, scope)
+        return issue_token(request, username, scope, expires_in)
