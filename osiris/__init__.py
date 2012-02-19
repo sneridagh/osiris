@@ -43,3 +43,67 @@ def main(global_config, **settings):
 
     config.scan('osiris')
     return config.make_wsgi_app()
+
+def includeme(config):
+    """Configuration function to make a pyramid app a osiris enabled one."""
+    settings = config.registry.settings
+
+    # setup application
+    setup = settings.get('velruse.setup', default_setup)
+    if setup:
+        config.include(setup)
+
+    if not settings.get('velruse.end_point'):
+        raise ConfigurationError(
+            'missing required setting "velruse.end_point"')
+
+    # setup backing storage
+    store = settings.get('velruse.store')
+    if store is None:
+        raise ConfigurationError(
+            'invalid setting velruse.store: {0}'.format(store))
+    config.include(store)
+
+    # include providers
+    providers = settings.get('velruse.providers', '')
+    providers = splitlines(providers)
+
+    for provider in providers:
+        config.include(provider)
+
+    # add the error views
+    config.scan(__name__)
+
+def make_app(**settings):
+    config = Configurator(settings=settings)
+    config.include(includeme)
+    return config.make_wsgi_app()
+
+
+def make_osiris_app(global_conf, **settings):
+    """Construct a complete WSGI app ready to serve by Paste
+
+    Example INI file:
+
+    .. code-block:: ini
+
+        [server:main]
+        use = egg:Paste#http
+        host = 0.0.0.0
+        port = 80
+
+        [composite:main]
+        use = egg:Paste#urlmap
+        / = YOURAPP
+        /oauth2 = osiris
+
+        [app:osiris]
+        use = egg:osiris
+
+        [app:YOURAPP]
+        use = egg:YOURAPP
+        full_stack = true
+        static_files = true
+
+    """
+    return make_app(**settings)

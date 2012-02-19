@@ -30,7 +30,7 @@ setup(name='osiris',
       test_suite="osiris",
       entry_points = """\
       [paste.app_factory]
-      main = osiris:main
+      main = osiris:make_osiris_app
       """,
       paster_plugins=['pyramid'],
       )

@@ -17,7 +17,7 @@ def token_endpoint(request):
     implicit grant type (since an access token is issued directly).
     """
     # import ipdb;ipdb.set_trace()
-    expires_in = request.registry.settings.get('oauth2.tokenexpiry', 0)
+    expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
 
     grant_type = request.params.get('grant_type')
 

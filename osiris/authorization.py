@@ -1,6 +1,7 @@
 from pyramid.interfaces import IAuthenticationPolicy
+from pyramid.httpexceptions import HTTPInternalServerError
 from osiris.errorhandling import OAuth2ErrorHandler
-from osiris.resources import issue_token
+from osiris.generator import generate_token
 
 
 def password_authorization(request, username, password, scope, expires_in):
@@ -14,4 +15,18 @@ def password_authorization(request, username, password, scope, expires_in):
     if not identity:
         return OAuth2ErrorHandler.error_unauthorized_client()
     else:
-        return issue_token(request, username, scope, expires_in)
+        # Create and store token
+        storage = request.registry.osiris_store
+        token = generate_token()
+        stored = storage.store(token, username, scope, expires_in)
+
+        # Issue token
+        if stored:
+            return dict(
+                        token=token['token'],
+                        scope=token['scope'],
+                        expires_in=expires_in
+                        )
+        else:
+            # If operation error, return a generic server error
+            return HTTPInternalServerError()
