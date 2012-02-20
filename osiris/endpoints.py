@@ -1,11 +1,9 @@
 from pyramid.view import view_config
 from osiris.errorhandling import OAuth2ErrorHandler
-from osiris.resources import Root
 from osiris.authorization import password_authorization
 
 
-@view_config(context=Root,
-             name='token',
+@view_config(name='token',
              renderer='json',
              request_method='POST',
              http_cache=0)

@@ -1,34 +1,22 @@
 import unittest
-
+import os
 from pyramid import testing
-from pyramid.testing import DummyRequest
-
-import pymongo
-import json
-from bson import json_util
-
-
-class DummyRequestREST(DummyRequest):
-    """ Enriching the DummyRequest to have more properties """
-    def __init__(self, params=None, environ=None, headers=None, path='/',
-                 cookies=None, post=None, **kw):
-        super(DummyRequestREST, self).__init__(params=params, environ=environ, headers=headers, path=path,
-                 cookies=cookies, post=post, **kw)
-
-        self.content_type = ""
-
-testSettings = {'mongodb.url': 'mongodb://localhost', 'mongodb.db_name': 'testDB'}
+from paste.deploy import loadapp
 
 
 class osirisTests(unittest.TestCase):
     def setUp(self):
-        self.config = testing.setUp()
+        conf_dir = os.path.abspath(__file__ + '/../..')
+        app = loadapp('config:development.ini', relative_to=conf_dir)
+        from webtest import TestApp
+        self.testapp = TestApp(app)
 
     def tearDown(self):
         testing.tearDown()
 
     def test_token_endpoint(self):
-        pass
+        res = self.testapp.post('/token?grant_type=password&username=victor&password=1', status=200)
+
 
     # def test_my_view(self):
     #     from osiris.views import my_view

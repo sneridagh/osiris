@@ -9,7 +9,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 requires = ['pyramid', 'pyramid_debugtoolbar', 'pyramid_who', 'pymongo']
 
 setup(name='osiris',
-      version='0.0',
+      version='1.0',
       description='Pyramid based oAuth server',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
@@ -26,7 +26,7 @@ setup(name='osiris',
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
-      tests_require=requires,
+      tests_require=requires + ['WebTest'],
       test_suite="osiris",
       entry_points = """\
       [paste.app_factory]
