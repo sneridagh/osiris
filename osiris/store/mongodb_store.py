@@ -63,7 +63,7 @@ class MongoDBStore(TokenStore):
             data['scope'] = scope
             data['issued_at'] = datetime.datetime.utcnow()
             data['expire_time'] = datetime.datetime.utcnow() + \
-                          datetime.timedelta(seconds=expires_in)
+                          datetime.timedelta(seconds=int(expires_in))
 
             self._conn[self.collection].insert(data)
 
