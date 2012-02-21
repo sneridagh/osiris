@@ -44,8 +44,7 @@ class MongoDBStore(TokenStore):
         #Set arbitrary limit on how large user_store session can grow to
         #http://www.mongodb.org/display/DOCS/Capped+Collections
         if not self.collection in conn.collection_names():
-            conn.create_collection(self.collection,
-                                   dict(capped=True, size=100000000))
+            conn.create_collection(self.collection, capped=True, size=100000000)
         return conn
 
     def retrieve(self, token):
@@ -62,7 +61,10 @@ class MongoDBStore(TokenStore):
             data['token'] = token
             data['scope'] = scope
             data['issued_at'] = datetime.datetime.utcnow()
-            data['expire_time'] = datetime.datetime.utcnow() + \
+            if expires_in == '0':
+                data['expire_time'] = 0
+            else:
+                data['expire_time'] = datetime.datetime.utcnow() + \
                           datetime.timedelta(seconds=int(expires_in))
 
             self._conn[self.collection].insert(data)

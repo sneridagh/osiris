@@ -2,7 +2,7 @@ import unittest
 import os
 from pyramid import testing
 from paste.deploy import loadapp
-import pymongo
+
 
 class osirisTests(unittest.TestCase):
     def setUp(self):
@@ -12,6 +12,7 @@ class osirisTests(unittest.TestCase):
         self.testapp = TestApp(self.app)
 
     def tearDown(self):
+        # self.app.registry.osiris_store._conn.drop_collection(self.app.registry.settings.get('osiris.store.collection'))
         testing.tearDown()
 
     def test_token_endpoint(self):
