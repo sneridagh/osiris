@@ -3,3 +3,4 @@
 *.pyc
 *.egg-info
 *.DS_Store
+.codeintel

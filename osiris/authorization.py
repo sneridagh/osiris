@@ -23,7 +23,8 @@ def password_authorization(request, username, password, scope, expires_in):
         # Issue token
         if stored:
             return dict(
-                        token=token,
+                        access_token=token,
+                        token_type='bearer',
                         scope=scope,
                         expires_in=expires_in
                         )
