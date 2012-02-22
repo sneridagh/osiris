@@ -9,7 +9,7 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 requires = ['pyramid', 'pyramid_debugtoolbar', 'pyramid_who', 'pymongo']
 
 setup(name='osiris',
-      version='1.0',
+      version='1.0 beta1',
       description='Pyramid based oAuth server',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[

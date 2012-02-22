@@ -45,3 +45,21 @@ class osirisTests(unittest.TestCase):
         self.assertTrue(token_store)
         self.assertEqual(token_store.get('token'), response.get('access_token'))
         self.assertEqual(token_store.get('username'), 'testuser')
+
+    def test_check_token_endpoint(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        testurl = '/checktoken?access_token=%s&username=testuser' % (str(access_token))
+        self.testapp.post(testurl, status=200)
+
+    def test_check_token_endpoint_autherror(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        testurl = '/checktoken?access_token=%s&username=testuser2' % (str(access_token))
+        self.testapp.post(testurl, status=401)
