@@ -1,11 +1,13 @@
 Introduction
-------------
+============
+
 Osiris (/oʊˈsaɪərɨs/) is an Egyptian god, usually identified as the god of the afterlife, the underworld and the dead. He is classically depicted as a green-skinned man with a pharaoh's beard, partially mummy-wrapped at the legs, wearing a distinctive crown with two large ostrich feathers at either side, and holding a symbolic crook and flail. Osiris was the afterlife's judge, he weighed the dead souls and compare them with the Feather of Truth. Those which weighed the most were sent to Ammut (the soul devourer) and not heavy enough to Aaru (the egyptian paradise).
 
-Osiris is an oAuth 2.0 (draft 22) compliant server based on Pyramid. The current version (1.0) it supports the `Resource owner password credentials` authentication flow. It uses pyramid_who as user backend providing the way to behave as an oAuth authentication gateway. This means that you can use your authentication backend (LDAP, SQL, etc.) oAuth enabled with Osiris. Osiris uses a pluggable store factory to store the issued token information. The current version includes the MongoDB one.
+Osiris is an oAuth 2.0 (draft 22) compliant server based on Pyramid. The current version (1.0) it supports the `resource owner password credentials` authentication flow. It uses pyramid_who as user backend providing the way to behave as an oAuth authentication gateway. This means that you can use your authentication backend (LDAP, SQL, etc.) oAuth enabled with Osiris. Osiris uses a pluggable store factory to store the issued token information. The current version includes the MongoDB one.
 
-The `Resource owner password credentials` flow
-----------------------------------------------
+The `resource owner password credentials` flow
+==============================================
+
 This flow is not the most popular oAuth flow, but it's useful in case that we want to oAuth enable an app or a set of apps in an scenario with an already existing user backend. Using this flow you can use Osiris as a gateway between your existing user store and oAuth enable it. Osiris will authenticate the user credentials against your user store and if suceeds it will issue a oAuth token. Then, an app can use it to impersonate the user's token to access an oAuth enabled REST API, for example.
 
 For that reason and out of the oAuth specification, Osiris features an additional endpoint to allow remote applications and resource servers to check previously issued tokens and users and validate it. This endpoint will respond if the token is valid for the user specified and if the token is not expired or revoked.
@@ -13,7 +15,7 @@ For that reason and out of the oAuth specification, Osiris features an additiona
 You can use Osiris as a standalone application or use it as a Pyramid plugin and make your app Osiris enabled.
 
 Setup
------
+=====
 
 This is the configuration to use it as a standalone Pyramid app, along with your own one using Paste urlmap in your app .ini:
 
@@ -64,7 +66,8 @@ and in the .ini:
     osiris.whoconfig = %(here)s/who.ini
 
 Options
--------
+=======
+
 These are the .ini options available for Osiris:
 
 osiris.store
@@ -88,8 +91,9 @@ osiris.tokenexpiry
 osiris.whoconfig
     The pyramid_who (repoze.who) .ini with the configuration of the authentication backends. Required.
 
-REST API for `Resource owner password credentials` flow
--------------------------------------------------------
+REST API for `resource owner password credentials` flow
+=======================================================
+
 Following the oAuth 2.0 authentication standard (draft 22), the `Resource owner password credentials` flow must implement this web services and use these parameters:
 
 /token
@@ -126,12 +130,14 @@ Following the oAuth 2.0 authentication standard (draft 22), the `Resource owner 
          }
 
 To do
------
+=====
+
 Osiris features only one oAuth 2.0 authentication flow, the `Resource owner password credentials`. It's ready to accomodate the remaining flows defined by oAuth 2.0. A similar case happens with the available storage backends. The current version sports only the MongoDB storage but Osiris support the use of a plugin storage model and can accomodate more storage types.
 
 Of course, any contribution is welcome. Please, feel free to contribute with your own storage plugins and help implementing the remaining oAuth flows.
 
 Credits
--------
+=======
+
 Pluggable store factory inspired by Ben Bangert's Velruse (https://github.com/bbangert/velruse).
 Borrowed error handling from pyramid-oauth2 (http://code.google.com/p/pyramid-oauth2/) by Kevin Van Wilder et al.
