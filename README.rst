@@ -17,9 +17,7 @@ You can use Osiris as a standalone application or use it as a Pyramid plugin and
 Setup
 =====
 
-This is the configuration to use it as a standalone Pyramid app, along with your own one using Paste urlmap in your app .ini:
-
-.. code-block:: ini
+This is the configuration to use it as a standalone Pyramid app, along with your own one using Paste urlmap in your app .ini::
 
     [server:main]
     use = egg:Paste#http
@@ -52,9 +50,7 @@ You can also Osiris enable your own app, in your __init__.py::
 
     config.include(osiris)
 
-and in the .ini:
-
-.. code-block:: ini
+and in the .ini::
 
     osiris.store = osiris.store.mongodb_store
     osiris.store.host = localhost
@@ -117,17 +113,36 @@ Following the oAuth 2.0 authentication standard (draft 22), the `Resource owner 
         application/x-www-form-urlencoded
 
     Response:
-         HTTP/1.1 200 OK
-         Content-Type: application/json;charset=UTF-8
-         Cache-Control: no-store
-         Pragma: no-cache
+        HTTP/1.1 200 OK
+        Content-Type: application/json;charset=UTF-8
+        Cache-Control: no-store
+        Pragma: no-cache
 
-         {
-           "access_token":"2YotnFZFEjr1zCsicMWpAA",
-           "token_type":"bearer",
-           "expires_in":3600,
-           "scope": "exampleScope"
-         }
+        { "access_token":"2YotnFZFEjr1zCsicMWpAA",
+        "token_type":"bearer",
+        "expires_in":3600,
+        "scope": "exampleScope" }
+
+/checktoken
+    Method:
+        POST
+    
+    Params:
+        access_token
+            Required. Value of the token to be checked
+
+        username
+            Required. The resource owner username, encoded as UTF-8.
+
+        scope
+            Optional.  The scope of the access request.
+
+    Content-Type:
+        application/x-www-form-urlencoded
+
+    Response:
+        If successful: HTTP/1.1 200 OK 
+        If not successful: HTTP/1.1 401 Unauthorized
 
 To do
 =====
