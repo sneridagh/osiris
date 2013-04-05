@@ -65,7 +65,7 @@ def check_token_endpoint(request):
         return OAuth2ErrorHandler.error_invalid_request('Required paramer "access_token" not found in the request')
 
     storage = request.registry.osiris_store
-    token_info = storage.retrieve(access_token)
+    token_info = storage.retrieve(token=access_token)
     if token_info:
         if token_info.get('username') == username:
             return HTTPOk()

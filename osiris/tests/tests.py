@@ -12,7 +12,7 @@ class osirisTests(unittest.TestCase):
         self.testapp = TestApp(self.app)
 
     def tearDown(self):
-        # self.app.registry.osiris_store._conn.drop_collection(self.app.registry.settings.get('osiris.store.collection'))
+        self.app.registry.osiris_store._conn.drop_collection(self.app.registry.settings.get('osiris.store.collection'))
         testing.tearDown()
 
     def test_token_endpoint(self):
@@ -22,7 +22,7 @@ class osirisTests(unittest.TestCase):
         self.assertTrue('access_token' in response and len(response.get('access_token')) == 20)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') == '')
-        self.assertTrue('expires_in' in response and response.get('expires_in') == '0')
+        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
         self.assertEqual(resp.content_type, 'application/json')
 
     def test_token_endpoint_autherror(self):
@@ -41,7 +41,7 @@ class osirisTests(unittest.TestCase):
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
 
-        token_store = self.app.registry.osiris_store.retrieve(response.get('access_token'))
+        token_store = self.app.registry.osiris_store.retrieve(token=response.get('access_token'))
         self.assertTrue(token_store)
         self.assertEqual(token_store.get('token'), response.get('access_token'))
         self.assertEqual(token_store.get('username'), 'testuser')
@@ -63,3 +63,14 @@ class osirisTests(unittest.TestCase):
 
         testurl = '/checktoken?access_token=%s&username=testuser2' % (str(access_token))
         self.testapp.post(testurl, status=401)
+
+    def test_grant_same_token(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        testurl = '/token?grant_type=password&username=testuser&password=test'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        self.assertEqual(access_token, response.get('access_token'))

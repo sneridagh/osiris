@@ -47,8 +47,9 @@ class MongoDBStore(TokenStore):
             conn.create_collection(self.collection, capped=True, size=100000000)
         return conn
 
-    def retrieve(self, token):
-        data = self._conn[self.collection].find_one({'token': token})
+    def retrieve(self, **kwargs):
+        query = dict([(k, v) for k, v in kwargs.items() if v])
+        data = self._conn[self.collection].find_one(query)
         if data:
             return data
         else:

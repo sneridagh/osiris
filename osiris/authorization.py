@@ -23,18 +23,28 @@ def password_authorization(request, username, password, scope, expires_in):
     if not identity:
         return OAuth2ErrorHandler.error_unauthorized_client()
     else:
-        # Create and store token
         storage = request.registry.osiris_store
-        token = generate_token()
-        stored = storage.store(token, username, scope, expires_in)
-
-        # Issue token
-        if stored:
-            return dict(access_token=token,
+        # Check if an existing token for the username and scope is already issued
+        issued = storage.retrieve(username=username, scope=scope)
+        if issued:
+            # Return the already issued one
+            return dict(access_token=issued.get('token'),
                         token_type='bearer',
-                        scope=scope,
-                        expires_in=expires_in
+                        scope=issued.get('scope'),
+                        expires_in=issued.get('expire_time')
                         )
         else:
-            # If operation error, return a generic server error
-            return HTTPInternalServerError()
+            # Create and store token
+            token = generate_token()
+            stored = storage.store(token, username, scope, expires_in)
+
+            # Issue token
+            if stored:
+                return dict(access_token=token,
+                            token_type='bearer',
+                            scope=scope,
+                            expires_in=int(expires_in)
+                            )
+            else:
+                # If operation error, return a generic server error
+                return HTTPInternalServerError()
