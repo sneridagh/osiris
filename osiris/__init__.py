@@ -5,16 +5,30 @@ from pyramid.config import Configurator
 from pyramid.exceptions import ConfigurationError
 from pyramid_who.whov2 import WhoV2AuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
+from pyramid.authentication import AuthTktAuthenticationPolicy
 
 log = logging.getLogger(__name__)
+
+import pkg_resources
+
+try:
+    pkg_resources.get_distribution('pyramid_ldap')
+except pkg_resources.DistributionNotFound:
+    HAS_PYRAMID_LDAP = False
+else:
+    HAS_PYRAMID_LDAP = True
+    import ldap
+    from pyramid_ldap import groupfinder
+    from pyramid_ldap import get_ldap_connector
 
 
 def default_setup(config):
     from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
     log.info('Using an unencrypted cookie-based session. This can be '
-             'changed by pointing the "velruse.setup" setting at a different '
-             'function for configuring the session factory.')
+             'changed by pointing the "osiris.setup" setting at a different '
+             'function for configuring the session factory and other possible '
+             'authentication backends, e.g pyramid_ldap.')
 
     settings = config.registry.settings
     secret = settings.get('osiris.session.secret')
@@ -31,21 +45,45 @@ def default_setup(config):
 
     config.set_session_factory(factory)
 
-    whoconfig = settings['osiris.whoconfig']
     identifier_id = 'auth_tkt'
-    authn_policy = WhoV2AuthenticationPolicy(whoconfig, identifier_id)
-    authz_policy = ACLAuthorizationPolicy()
+    ldap_enabled = settings.get('osiris.ldap_enabled')
+
+    if HAS_PYRAMID_LDAP and ldap_enabled:
+        config.include('pyramid_ldap')
+        authn_policy = AuthTktAuthenticationPolicy(identifier_id, callback=groupfinder)
+
+        config.ldap_setup(settings.get('osiris.ldap.server'),
+                          bind=settings.get('osiris.ldap.userbind'),
+                          passwd=settings.get('osiris.ldap.password')
+                          )
+
+        config.ldap_set_login_query(base_dn=settings.get('osiris.ldap.userbasedn'),
+                                    filter_tmpl=settings.get('osiris.ldap.userfilter'),
+                                    scope=getattr(ldap, settings.get('osiris.ldap.userscope')),
+                                    )
+
+        config.ldap_set_groups_query(base_dn=settings.get('osiris.ldap.groupbasedn'),
+                                     filter_tmpl=settings.get('osiris.ldap.groupfilter'),
+                                     scope=getattr(ldap, settings.get('osiris.ldap.groupscope')),
+                                     cache_period=settings.get('osiris.ldap.groupcache'),
+                                     )
+
+    if not ldap_enabled:
+        whoconfig = settings['osiris.whoconfig']
+
+        authn_policy = WhoV2AuthenticationPolicy(whoconfig, identifier_id)
+        authz_policy = ACLAuthorizationPolicy()
 
     config.set_authentication_policy(authn_policy)
     config.set_authorization_policy(authz_policy)
 
 
 def includeme(config):
-    """Configuration function to make a pyramid app a osiris enabled one."""
+    """Configuration method to make a pyramid app an osiris enabled one."""
     settings = config.registry.settings
 
     # setup application
-    setup = settings.get('velruse.setup', default_setup)
+    setup = settings.get('osiris.setup', default_setup)
     if setup:
         config.include(setup)
 

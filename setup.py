@@ -6,32 +6,38 @@ here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
 CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
-requires = ['pyramid', 'pyramid_debugtoolbar', 'pyramid_who', 'pymongo']
+requires = ['pyramid',
+            'pyramid_debugtoolbar',
+            'pyramid_who',
+            'pymongo',
+            'waitress']
 
 setup(name='osiris',
-      version='1.0 beta1',
+      version='1.0b2',
       description='Pyramid based oAuth server',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
-        "Programming Language :: Python",
-        "Framework :: Pylons",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
-        ],
+          "Programming Language :: Python",
+          "Framework :: Pylons",
+          "Topic :: Internet :: WWW/HTTP",
+          "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+      ],
       author='Victor Fernandez de Alba',
       author_email='sneridagh@gmail.com',
       url='https://github.com/sneridagh/osiris.git',
       keywords='web pyramid pylons',
-      packages=find_packages(),
+      packages=find_packages('.'),
+      package_dir={'': '.'},
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
       tests_require=requires + ['WebTest'],
-      test_suite="osiris",
+      extras_require={
+          'test': ['WebTest', ],
+          'ldap': ['pyramid_ldap', ],
+      },
       entry_points="""\
       [paste.app_factory]
       main = osiris:make_osiris_app
       """,
-      paster_plugins=['pyramid'],
       )
-
