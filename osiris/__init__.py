@@ -1,6 +1,7 @@
 import logging
 import os
 
+from pyramid.settings import asbool
 from pyramid.config import Configurator
 from pyramid.exceptions import ConfigurationError
 from pyramid_who.whov2 import WhoV2AuthenticationPolicy
@@ -46,7 +47,7 @@ def default_setup(config):
     config.set_session_factory(factory)
 
     identifier_id = 'auth_tkt'
-    ldap_enabled = settings.get('osiris.ldap_enabled')
+    ldap_enabled = asbool(settings.get('osiris.ldap_enabled'))
 
     if HAS_PYRAMID_LDAP and ldap_enabled:
         config.include('pyramid_ldap')
