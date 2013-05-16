@@ -58,6 +58,7 @@ def check_token_endpoint(request):
 
     access_token = request.params.get('access_token')
     username = request.params.get('username')
+    scope = request.params.get('scope')
 
     if username is None:
         return OAuth2ErrorHandler.error_invalid_request('Required paramer "username" not found in the request')
@@ -68,6 +69,12 @@ def check_token_endpoint(request):
     token_info = storage.retrieve(token=access_token)
     if token_info:
         if token_info.get('username') == username:
-            return HTTPOk()
+            if scope:
+                if token_info.get('scope') == scope:
+                    return HTTPOk()
+                else:
+                    return OAuth2ErrorHandler.error_invalid_scope()
+            else:
+                return HTTPOk()
 
     return HTTPUnauthorized()

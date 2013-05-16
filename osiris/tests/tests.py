@@ -3,6 +3,8 @@ import os
 from pyramid import testing
 from paste.deploy import loadapp
 
+from osiris.appconst import ACCESS_TOKEN_LENGTH
+
 
 class osirisTests(unittest.TestCase):
     def setUp(self):
@@ -19,7 +21,7 @@ class osirisTests(unittest.TestCase):
         testurl = '/token?grant_type=password&username=testuser&password=test'
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == 20)
+        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') == '')
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
