@@ -10,13 +10,13 @@ dead souls and compare them with the Feather of Truth. Those which weighed the
 most were sent to Ammut (the soul devourer) and not heavy enough to Aaru (the
 egyptian paradise).
 
-Osiris is an oAuth 2.0 (draft 22) compliant server based on Pyramid. The current
-version (1.0) it supports the `resource owner password credentials`
-authentication flow. It uses pyramid_who as user backend providing the way to
-behave as an oAuth authentication gateway. This means that you can use your
-authentication backend (LDAP, SQL, etc.) oAuth enabled with Osiris. Osiris uses
-a pluggable store factory to store the issued token information. The current
-version includes the MongoDB one.
+Osiris is an oAuth 2.0 compliant server based on Pyramid. The current version
+(1.0) it supports the `resource owner password credentials` authentication flow.
+You can use your preferred authentication backend (LDAP, SQL, etc.) in order to
+oAuth enable it with Osiris. You can also use your preferred backend storage as
+Osiris uses a pluggable store factory to store the issued token information. The
+current version includes the MongoDB one.
+
 
 The `resource owner password credentials` flow
 ==============================================
@@ -37,6 +37,7 @@ revoked.
 
 You can use Osiris as a standalone application or use it as a Pyramid plugin and
 make your app Osiris enabled.
+
 
 Setup
 =====
@@ -65,6 +66,7 @@ own one using Paste urlmap in your app .ini::
     osiris.tokenexpiry = 0
 
     osiris.whoconfig = %(here)s/who.ini
+    osiris.ldap_enabled = false
 
     [app:YOURAPP]
     use = egg:YOURAPP
@@ -85,6 +87,10 @@ and in the .ini::
     osiris.tokenexpiry = 0
 
     osiris.whoconfig = %(here)s/who.ini
+    osiris.ldap_enabled = false
+
+Or use it standalone (see production.ini).
+
 
 Options
 =======
@@ -112,6 +118,7 @@ osiris.tokenexpiry
 osiris.whoconfig
     The pyramid_who (repoze.who) .ini with the configuration of the authentication backends. Required.
 
+
 REST API for `resource owner password credentials` flow
 =======================================================
 
@@ -134,7 +141,7 @@ parameters:
             Required. The resource owner password, encoded as UTF-8.
 
         scope
-            Optional.  The scope of the access request.
+            Optional. The scope of the access request.
 
     Content-Type:
         application/x-www-form-urlencoded
@@ -145,7 +152,7 @@ parameters:
         Cache-Control: no-store
         Pragma: no-cache
 
-        { "access_token":"2YotnFZFEjr1zCsicMWpAA",
+        { "access_token":"Qwe1235rwersdgasdfghjkyuiyuihfgh",
         "token_type":"bearer",
         "expires_in":3600,
         "scope": "exampleScope" }
@@ -162,7 +169,7 @@ parameters:
             Required. The resource owner username, encoded as UTF-8.
 
         scope
-            Optional.  The scope of the access request.
+            Optional. The scope of the access request.
 
     Content-Type:
         application/x-www-form-urlencoded
@@ -170,6 +177,52 @@ parameters:
     Response:
         If successful: HTTP/1.1 200 OK
         If not successful: HTTP/1.1 401 Unauthorized
+
+
+Authentication backend
+======================
+
+You can choose between two authentication backend plugins: pyramid_ldap and
+pyramid_who.
+
+pyramid_ldap (for LDAP authentication backends)
+-----------------------------------------------
+
+pyramid_ldap is the defacto standard plugin when dealing with ldap in pyramid.
+
+This is the configuration needed in the .ini to enable LDAP::
+
+    osiris.ldap_enabled = true
+    osiris.ldap.server = ldaps://your.ldap.uri
+    osiris.ldap.userbind = cn=user.to.bind,ou=users,dc=my,dc=domain
+    osiris.ldap.password = secret
+    osiris.ldap.userbasedn = ou=users,dc=my,dc=domain
+    osiris.ldap.userfilter = (cn=%+(login)s)
+    osiris.ldap.userscope = SCOPE_ONELEVEL
+    osiris.ldap.groupbasedn = ou=groups,dc=my,dc=domain
+    osiris.ldap.groupfilter = (&(objectClass=groupOfNames)(member=%+(userdn)s))
+    osiris.ldap.groupscope = SCOPE_SUBTREE
+    osiris.ldap.groupcache = 600
+
+Adjust them to match your LDAP configuration. For further information, see:
+http://docs.pylonsproject.org/projects/pyramid_ldap/en/latest/
+
+pyramid_who
+-----------
+
+pyramid_who is a plugin that provides a pluggable facility to connect with
+several user backends (htpass, SQL, etc.) using repoze.who plugins.
+
+In order to use it, you should not to enable ldap::
+
+    osiris.ldap_enabled = false
+
+and provide the path to your who.ini::
+
+    osiris.whoconfig = %(here)s/who.ini
+
+For more information see: http://docs.repoze.org/who/2.0/
+
 
 To do
 =====
@@ -183,6 +236,7 @@ accomodate more storage types.
 
 Of course, any contribution is welcome. Please, feel free to contribute with
 your own storage plugins and help implementing the remaining oAuth flows.
+
 
 Credits
 =======
