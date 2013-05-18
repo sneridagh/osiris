@@ -41,10 +41,9 @@ class MongoDBStore(TokenStore):
         except ConnectionFailure:
             raise Exception('Unable to connect to MongoDB')
         conn = db_conn[self.db]
-        #Set arbitrary limit on how large user_store session can grow to
-        #http://www.mongodb.org/display/DOCS/Capped+Collections
+
         if not self.collection in conn.collection_names():
-            conn.create_collection(self.collection, capped=True, size=100000000)
+            conn.create_collection(self.collection)
         return conn
 
     def retrieve(self, **kwargs):
@@ -66,7 +65,7 @@ class MongoDBStore(TokenStore):
                 data['expire_time'] = 0
             else:
                 data['expire_time'] = datetime.datetime.utcnow() + \
-                          datetime.timedelta(seconds=int(expires_in))
+                    datetime.timedelta(seconds=int(expires_in))
 
             self._conn[self.collection].insert(data)
 
@@ -75,9 +74,9 @@ class MongoDBStore(TokenStore):
         else:
             return True
 
-    def delete(self, key):
+    def delete(self, token):
         try:
-            self._conn[self.collection].remove({'key': key})
+            self._conn[self.collection].remove({'token': token})
         except OperationFailure:
             return False
         else:

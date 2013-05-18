@@ -17,7 +17,7 @@ class TokenStore(object):
         :rtype: dict
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def store(self, token, username, scope, expires_in):
         """This method stores token data class dict in the storage.
@@ -30,7 +30,7 @@ class TokenStore(object):
         :rtype: boolean
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def delete(self, token):
         """This method deletes a token data dict from the storage
@@ -42,7 +42,7 @@ class TokenStore(object):
         :rtype: boolean
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     def purge_expired(self):
         """This method purges all expired data from the storage
@@ -52,4 +52,4 @@ class TokenStore(object):
         implement this method, but can do nothing.
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover

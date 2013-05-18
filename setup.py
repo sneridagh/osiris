@@ -13,7 +13,7 @@ requires = ['pyramid',
             'waitress']
 
 setup(name='osiris',
-      version='1.0b2',
+      version='1.0',
       description='Pyramid based oAuth server',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
@@ -31,12 +31,12 @@ setup(name='osiris',
       include_package_data=True,
       zip_safe=False,
       install_requires=requires,
-      tests_require=requires + ['WebTest'],
+      tests_require=requires + ['WebTest', 'WSGIProxy2'],
       extras_require={
-          'test': ['WebTest', ],
+          'test': ['WebTest', 'WSGIProxy2'],
           'ldap': ['pyramid_ldap', ],
       },
-      entry_points="""\
+      entry_points="""
       [paste.app_factory]
       main = osiris:make_osiris_app
       """,

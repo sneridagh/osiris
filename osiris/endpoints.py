@@ -1,7 +1,10 @@
 from pyramid.view import view_config
+from pyramid.httpexceptions import HTTPOk, HTTPUnauthorized
+
+from osiris.appconst import ACCESS_TOKEN_LENGTH
 from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.authorization import password_authorization
-from pyramid.httpexceptions import HTTPOk, HTTPUnauthorized
+
 
 @view_config(name='token',
              renderer='json',
@@ -30,13 +33,13 @@ def token_endpoint(request):
         return OAuth2ErrorHandler.error_unsupported_grant_type()
     # Client Credentials Grant
     elif grant_type == 'password':
-        scope = request.params.get('scope', '')  # Optional
+        scope = request.params.get('scope', None)  # Optional
         username = request.params.get('username', None)
         password = request.params.get('password', None)
         if username is None:
-            return OAuth2ErrorHandler.error_invalid_request('Required paramer "username" not found in the request')
+            return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
         elif password is None:
-            return OAuth2ErrorHandler.error_invalid_request('Required paramer "password" not found in the request')
+            return OAuth2ErrorHandler.error_invalid_request('Required parameter password not found in the request')
         else:
             return password_authorization(request, username, password, scope, expires_in)
     else:
@@ -58,23 +61,21 @@ def check_token_endpoint(request):
 
     access_token = request.params.get('access_token')
     username = request.params.get('username')
-    scope = request.params.get('scope')
+    scope = request.params.get('scope', None)
 
     if username is None:
-        return OAuth2ErrorHandler.error_invalid_request('Required paramer "username" not found in the request')
+        return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
     elif access_token is None:
-        return OAuth2ErrorHandler.error_invalid_request('Required paramer "access_token" not found in the request')
+        return OAuth2ErrorHandler.error_invalid_request('Required parameter access_token not found in the request')
+    elif len(access_token) != ACCESS_TOKEN_LENGTH:
+        return OAuth2ErrorHandler.error_invalid_request('Required parameter not valid found in the request')
 
     storage = request.registry.osiris_store
     token_info = storage.retrieve(token=access_token)
     if token_info:
-        if token_info.get('username') == username:
-            if scope:
-                if token_info.get('scope') == scope:
-                    return HTTPOk()
-                else:
-                    return OAuth2ErrorHandler.error_invalid_scope()
-            else:
-                return HTTPOk()
+        if token_info.get('scope') == scope and token_info.get('username') == username:
+            return HTTPOk()
+        else:
+            return HTTPUnauthorized()
 
     return HTTPUnauthorized()

@@ -2,11 +2,12 @@ from pyramid.interfaces import IAuthenticationPolicy
 from pyramid.httpexceptions import HTTPInternalServerError
 from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.generator import generate_token
+from pyramid.settings import asbool
 
 
 def password_authorization(request, username, password, scope, expires_in):
 
-    ldap_enabled = request.registry.settings.get('osiris.ldap_enabled')
+    ldap_enabled = asbool(request.registry.settings.get('osiris.ldap_enabled'))
 
     if ldap_enabled:
         from osiris import get_ldap_connector
@@ -21,7 +22,7 @@ def password_authorization(request, username, password, scope, expires_in):
         identity, headers = authapi.login(credentials)
 
     if not identity:
-        return OAuth2ErrorHandler.error_unauthorized_client()
+        return OAuth2ErrorHandler.error_invalid_grant()
     else:
         storage = request.registry.osiris_store
         # Check if an existing token for the username and scope is already issued
