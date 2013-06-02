@@ -4,7 +4,7 @@ ChangeLog
 1.0 (2013-05-19)
 ----------------
 
-- Improved test coverage (76% overall, 100% on implemented parts)
+- Improved test coverage (91% overall, 100% on implemented parts)
 - Updated implementation to be standard with the final oAuth 2.0 spec.
 - Polished scopes, error handling, return codes and error messaging
 - Included support for pyramid_ldap plug-in, as it has a better implementation
