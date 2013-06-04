@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+1.1 (2013-06-04)
+------------------
+
+- Added a new way of parse LDAP settings to use with pyramid_ldap via a config
+  file ldap.ini
+
 1.0.1 (2013-06-04)
 ------------------
 

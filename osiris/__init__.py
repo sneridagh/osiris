@@ -1,5 +1,6 @@
 import logging
 import os
+import ConfigParser
 
 from pyramid.settings import asbool
 from pyramid.config import Configurator
@@ -54,20 +55,24 @@ def default_setup(config):
         authn_policy = AuthTktAuthenticationPolicy(identifier_id, callback=groupfinder)
         authz_policy = ACLAuthorizationPolicy()
 
-        config.ldap_setup(settings.get('osiris.ldap.server'),
-                          bind=settings.get('osiris.ldap.userbind'),
-                          passwd=settings.get('osiris.ldap.password')
+        # parse ldap.ini
+        ldapconfig = ConfigParser.RawConfigParser()
+        ldapconfig.read(settings.get('osiris.ldapconfig'))
+
+        config.ldap_setup(ldapconfig.get('ldap', 'server'),
+                          bind=ldapconfig.get('ldap', 'userbind'),
+                          passwd=ldapconfig.get('ldap', 'password')
                           )
 
-        config.ldap_set_login_query(base_dn=settings.get('osiris.ldap.userbasedn'),
-                                    filter_tmpl=settings.get('osiris.ldap.userfilter'),
-                                    scope=getattr(ldap, settings.get('osiris.ldap.userscope')),
+        config.ldap_set_login_query(base_dn=ldapconfig.get('ldap', 'userbasedn'),
+                                    filter_tmpl=ldapconfig.get('ldap', 'userfilter'),
+                                    scope=getattr(ldap, ldapconfig.get('ldap', 'userscope')),
                                     )
 
-        config.ldap_set_groups_query(base_dn=settings.get('osiris.ldap.groupbasedn'),
-                                     filter_tmpl=settings.get('osiris.ldap.groupfilter'),
-                                     scope=getattr(ldap, settings.get('osiris.ldap.groupscope')),
-                                     cache_period=settings.get('osiris.ldap.groupcache'),
+        config.ldap_set_groups_query(base_dn=ldapconfig.get('ldap', 'groupbasedn'),
+                                     filter_tmpl=ldapconfig.get('ldap', 'groupfilter'),
+                                     scope=getattr(ldap, ldapconfig.get('ldap', 'groupscope')),
+                                     cache_period=ldapconfig.get('ldap', 'groupcache'),
                                      )
 
     if not ldap_enabled:
