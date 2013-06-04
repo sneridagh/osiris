@@ -52,6 +52,7 @@ def default_setup(config):
     if HAS_PYRAMID_LDAP and ldap_enabled:
         config.include('pyramid_ldap')
         authn_policy = AuthTktAuthenticationPolicy(identifier_id, callback=groupfinder)
+        authz_policy = ACLAuthorizationPolicy()
 
         config.ldap_setup(settings.get('osiris.ldap.server'),
                           bind=settings.get('osiris.ldap.userbind'),
