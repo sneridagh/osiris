@@ -1,12 +1,14 @@
 """MongoDB UserStore implementation"""
 
 import datetime
-from pymongo import Connection
+from pymongo import MongoClient
+from pymongo import MongoReplicaSetClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
 
-from pyramid.exceptions import ConfigurationError
 from pyramid.decorator import reify
+from pyramid.exceptions import ConfigurationError
+from pyramid.settings import asbool
 
 from osiris.store.interface import TokenStore
 
@@ -18,8 +20,13 @@ def includeme(config):
     db = settings.get('osiris.store.db', 'osiris')
     collection = settings.get('osiris.store.collection', 'tokens')
 
+    enable_cluster = asbool(settings.get('osiris.mongodb.cluster', False))
+    hosts = settings.get('osiris.mongodb.hosts', 'localhost:27017')
+    replica_set = settings.get('osiris.mongodb.replica_set', '')
+
     store = MongoDBStore(
         host=host, port=port, db=db, collection=collection,
+        enable_cluster=enable_cluster, hosts=hosts, replica_set=replica_set
     )
     config.registry.osiris_store = store
 
@@ -27,17 +34,23 @@ def includeme(config):
 class MongoDBStore(TokenStore):
     """MongoDB Storage for oAuth tokens"""
     def __init__(self, host='localhost', port=27017, db="osiris",
-                 collection='tokens'):
+                 collection='tokens', enable_cluster=False, hosts='', replica_set=''):
         self.host = host
         self.port = port
         self.db = db
         self.collection = collection
+        self.enable_cluster = enable_cluster
+        self.hosts = hosts
+        self.replica_set = replica_set
 
     @reify
     def _conn(self):
         """The MongoDB connection, cached for this call"""
         try:
-            db_conn = Connection(self.host, self.port, slave_okay=False)
+            if not self.enable_cluster:
+                db_conn = MongoClient(self.host, self.port, slave_okay=False)
+            else:
+                db_conn = MongoReplicaSetClient(self.hosts, replicaSet=self.replica_set)
         except ConnectionFailure:
             raise Exception('Unable to connect to MongoDB')
         conn = db_conn[self.db]
