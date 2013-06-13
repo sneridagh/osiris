@@ -1,6 +1,12 @@
 ChangeLog
 =========
 
+1.2 (2013-06-13)
+------------------
+
+- Update the deprecated method to connect to a MongoDB database.
+- Added ability to connect to a MongoDB replica set.
+
 1.1 (2013-06-04)
 ------------------
 
