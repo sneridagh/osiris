@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from pymongo import MongoReplicaSetClient
 from pymongo.errors import ConnectionFailure
 from pymongo.errors import OperationFailure
+from pymongo.errors import AutoReconnect
 
 from pyramid.decorator import reify
 from pyramid.exceptions import ConfigurationError
@@ -23,18 +24,41 @@ def includeme(config):
     enable_cluster = asbool(settings.get('osiris.mongodb.cluster', False))
     hosts = settings.get('osiris.mongodb.hosts', 'localhost:27017')
     replica_set = settings.get('osiris.mongodb.replica_set', '')
+    use_greenlets = settings.get('osiris.mongodb.use_greenlets', '')
 
     store = MongoDBStore(
         host=host, port=port, db=db, collection=collection,
-        enable_cluster=enable_cluster, hosts=hosts, replica_set=replica_set
+        enable_cluster=enable_cluster, hosts=hosts, replica_set=replica_set,
+        use_greenlets=use_greenlets
     )
+
     config.registry.osiris_store = store
+
+
+def handle_reconnects(fun):
+    def replacement(*args, **kwargs):
+        # Handle exceptions in case of database operational error
+        try:
+            response = fun(*args, **kwargs)
+        except AutoReconnect:
+            tryin_to_reconnect = True
+            while tryin_to_reconnect:
+                try:
+                    response = fun(*args, **kwargs)
+                except AutoReconnect:
+                    pass
+                else:
+                    tryin_to_reconnect = False
+        else:
+            return response
+    return replacement
 
 
 class MongoDBStore(TokenStore):
     """MongoDB Storage for oAuth tokens"""
     def __init__(self, host='localhost', port=27017, db="osiris",
-                 collection='tokens', enable_cluster=False, hosts='', replica_set=''):
+                 collection='tokens', enable_cluster=False, hosts='',
+                 replica_set='', use_greenlets=False):
         self.host = host
         self.port = port
         self.db = db
@@ -42,6 +66,7 @@ class MongoDBStore(TokenStore):
         self.enable_cluster = enable_cluster
         self.hosts = hosts
         self.replica_set = replica_set
+        self.use_greenlets = use_greenlets
 
     @reify
     def _conn(self):
@@ -50,15 +75,19 @@ class MongoDBStore(TokenStore):
             if not self.enable_cluster:
                 db_conn = MongoClient(self.host, self.port, slave_okay=False)
             else:
-                db_conn = MongoReplicaSetClient(self.hosts, replicaSet=self.replica_set)
+                db_conn = MongoReplicaSetClient(self.hosts,
+                                                replicaSet=self.replica_set,
+                                                use_greenlets=self.use_greenlets)
         except ConnectionFailure:
             raise Exception('Unable to connect to MongoDB')
         conn = db_conn[self.db]
 
         if not self.collection in conn.collection_names():
             conn.create_collection(self.collection)
+
         return conn
 
+    @handle_reconnects
     def retrieve(self, **kwargs):
         query = dict([(k, v) for k, v in kwargs.items() if v])
         data = self._conn[self.collection].find_one(query)
@@ -67,6 +96,7 @@ class MongoDBStore(TokenStore):
         else:
             return None
 
+    @handle_reconnects
     def store(self, token, username, scope, expires_in):
         data = {}
         try:
@@ -87,6 +117,7 @@ class MongoDBStore(TokenStore):
         else:
             return True
 
+    @handle_reconnects
     def delete(self, token):
         try:
             self._conn[self.collection].remove({'token': token})
