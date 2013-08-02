@@ -1,11 +1,11 @@
 ChangeLog
 =========
 
-1.3 (unreleased)
+1.3 (2013-08-02)
 ----------------
 
-- Nothing changed yet.
-
+ * Added use of greenlets and handle reconnects if cluster is enabled [Victor Fernandez de Alba]
+ * Support for mongoDB cluster [Victor Fernandez de Alba]
 
 1.2 (2013-06-13)
 ------------------
