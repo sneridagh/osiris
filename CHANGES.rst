@@ -1,6 +1,24 @@
 ChangeLog
 =========
 
+1.4 (unreleased)
+----------------
+
+- Nothing changed yet.
+
+
+1.3 (2013-08-02)
+----------------
+
+ * Added use of greenlets and handle reconnects if cluster is enabled [Victor Fernandez de Alba]
+ * Support for mongoDB cluster [Victor Fernandez de Alba]
+
+1.2 (2013-06-13)
+------------------
+
+- Update the deprecated method to connect to a MongoDB database.
+- Added ability to connect to a MongoDB replica set.
+
 1.1 (2013-06-04)
 ------------------
 

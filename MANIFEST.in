@@ -1,2 +1,5 @@
-include *.txt *.ini *.cfg *.rst
-recursive-include osiris *.ico *.png *.css *.gif *.jpg *.pt *.txt *.mak *.mako *.js *.html *.xml
+include *.rst *.ini
+
+recursive-include osiris *
+
+global-exclude *.pyc

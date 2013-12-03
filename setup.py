@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(here, 'README.rst')).read()
-CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
+CHANGES = open(os.path.join(here, 'CHANGES.rst')).read()
 
 requires = ['pyramid',
             'pyramid_debugtoolbar',
@@ -13,7 +13,7 @@ requires = ['pyramid',
             'waitress']
 
 setup(name='osiris',
-      version='1.1',
+      version='1.4.dev0',
       description='Pyramid based oAuth server',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
