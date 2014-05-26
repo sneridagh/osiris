@@ -8,13 +8,16 @@ from pyramid.settings import asbool
 def password_authorization(request, username, password, scope, expires_in):
 
     ldap_enabled = asbool(request.registry.settings.get('osiris.ldap_enabled'))
+    who_enabled = asbool(request.registry.settings.get('osiris.who_enabled'))
+
+    identity = None
 
     if ldap_enabled:
         from osiris import get_ldap_connector
         connector = get_ldap_connector(request)
         identity = connector.authenticate(username, password)
 
-    else:
+    if who_enabled and not identity:
         policy = request.registry.queryUtility(IAuthenticationPolicy)
         authapi = policy._getAPI(request)
         credentials = {'login': username, 'password': password}

@@ -3,7 +3,7 @@ from pyramid import testing
 
 from osiris.appconst import ACCESS_TOKEN_LENGTH
 
-LEGACY_URL = 'https://oauth-test.upc.edu#requests'
+LEGACY_URL = 'https://oauth-test.upc.edu'
 
 
 class legacyTests(unittest.TestCase):

@@ -1,9 +1,16 @@
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPOk, HTTPUnauthorized
-
+from pyramid.response import Response
 from osiris.appconst import ACCESS_TOKEN_LENGTH
 from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.authorization import password_authorization
+
+
+@view_config(route_name='default_view',
+             request_method='GET',
+             http_cache=0)
+def default_view(request):
+    return Response("I am an Osiris")
 
 
 @view_config(name='token',
@@ -17,7 +24,6 @@ def token_endpoint(request):
     endpoint is used with every authorization grant except for the
     implicit grant type (since an access token is issued directly).
     """
-
     expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
 
     grant_type = request.params.get('grant_type')

@@ -49,6 +49,7 @@ def default_setup(config):
 
     identifier_id = 'auth_tkt'
     ldap_enabled = asbool(settings.get('osiris.ldap_enabled'))
+    who_enabled = asbool(settings.get('osiris.who_enabled'))
 
     if HAS_PYRAMID_LDAP and ldap_enabled:
         config.include('pyramid_ldap')
@@ -75,7 +76,7 @@ def default_setup(config):
                                      cache_period=ldapconfig.get('ldap', 'groupcache'),
                                      )
 
-    if not ldap_enabled:
+    if who_enabled:
         whoconfig = settings['osiris.whoconfig']
 
         authn_policy = WhoV2AuthenticationPolicy(whoconfig, identifier_id)
@@ -101,7 +102,8 @@ def includeme(config):
             'invalid setting osiris.store: {0}'.format(store))
     config.include(store)
 
-    # add the error views
+    # add the views
+    config.add_route('default_view', '/')
     config.scan(__name__)
 
 
