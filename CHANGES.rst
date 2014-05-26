@@ -1,11 +1,14 @@
 ChangeLog
 =========
 
-1.4 (unreleased)
+1.4 (2014-05-26)
 ----------------
 
-- Nothing changed yet.
-
+* Make Osiris support dual authentication (LDAP-based and WHO-based) with priority to the LDAP-based user repository. [Victor Fernandez de Alba]
+* Add License [Victor Fernandez de Alba]
+* Merge branch 'master' of github.com:sneridagh/osiris [Victor Fernandez de Alba]
+* More tests, unify ldap config on .ini [Victor Fernandez de Alba]
+* Unified extensions for README and CHANGES. Updated MANIFEST.in [Victor Fernandez de Alba]
 
 1.3 (2013-08-02)
 ----------------
