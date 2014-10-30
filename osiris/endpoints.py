@@ -64,7 +64,6 @@ def check_token_endpoint(request):
     access to the user's resources, the resource server needs to check if the
     token provided is valid and check if it was issued to the user.
     """
-
     access_token = request.params.get('access_token')
     username = request.params.get('username')
     scope = request.params.get('scope', None)

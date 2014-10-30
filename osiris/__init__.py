@@ -47,6 +47,9 @@ def default_setup(config):
 
     config.set_session_factory(factory)
 
+    if settings.get('osiris.legacy', False):
+        config.add_tween('osiris.legacy.legacy_oauth_factory')
+
     identifier_id = 'auth_tkt'
     ldap_enabled = asbool(settings.get('osiris.ldap_enabled'))
     who_enabled = asbool(settings.get('osiris.who_enabled'))
