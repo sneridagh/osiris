@@ -5,24 +5,27 @@ from osiris.generator import generate_token
 from pyramid.settings import asbool
 
 
-def password_authorization(request, username, password, scope, expires_in):
+def password_authorization(request, username, password, scope, expires_in, bypass=False):
 
     ldap_enabled = asbool(request.registry.settings.get('osiris.ldap_enabled'))
     who_enabled = asbool(request.registry.settings.get('osiris.who_enabled'))
 
     identity = None
 
-    if ldap_enabled:
-        from osiris import get_ldap_connector
-        connector = get_ldap_connector(request)
-        identity = connector.authenticate(username, password)
+    if bypass:
+        identity = True
+    else:
+        if ldap_enabled:
+            from osiris import get_ldap_connector
+            connector = get_ldap_connector(request)
+            identity = connector.authenticate(username, password)
 
-    if who_enabled and not identity:
-        policy = request.registry.queryUtility(IAuthenticationPolicy)
-        authapi = policy._getAPI(request)
-        credentials = {'login': username, 'password': password}
+        if who_enabled and not identity:
+            policy = request.registry.queryUtility(IAuthenticationPolicy)
+            authapi = policy._getAPI(request)
+            credentials = {'login': username, 'password': password}
 
-        identity, headers = authapi.login(credentials)
+            identity, headers = authapi.login(credentials)
 
     if not identity:
         return OAuth2ErrorHandler.error_invalid_grant()

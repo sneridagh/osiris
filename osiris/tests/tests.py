@@ -169,3 +169,24 @@ class osirisTests(unittest.TestCase):
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
         self.assertEqual(access_token, response.get('access_token'))
+
+    def test_bypass_token_endpoint(self):
+        # The standard allows arguments with "application/x-www-form-urlencoded"
+        testurl = '/token-bypass?grant_type=password&username=testuser&password='
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
+        self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
+        self.assertTrue('scope' in response and response.get('scope') is None)
+        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertEqual(resp.content_type, 'application/json')
+
+        # Allow pass the arguments via standard post payload
+        payload = {"grant_type": "password", "username": "testuser"}
+        resp = self.testapp.post('/token-bypass', payload, status=200)
+        response = resp.json
+        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
+        self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
+        self.assertTrue('scope' in response and response.get('scope') is None)
+        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertEqual(resp.content_type, 'application/json')

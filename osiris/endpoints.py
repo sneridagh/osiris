@@ -84,3 +84,40 @@ def check_token_endpoint(request):
             return HTTPUnauthorized()
 
     return HTTPUnauthorized()
+
+
+@view_config(name='token-bypass',
+             renderer='json',
+             request_method='POST',
+             http_cache=0)
+def bypass_token_endpoint(request):
+    """
+    Anonymous version of the osiris.token_endpoint. This endpoint differs from
+    the original in that the password is not required and the password_authorization
+    is done bypassing authentication.
+
+    NOTE:This endpoint MUST be firewalled.
+    """
+    expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
+
+    grant_type = request.params.get('grant_type')
+
+    # Authorization Code Grant
+    if grant_type == 'authorization_code':
+        return OAuth2ErrorHandler.error_unsupported_grant_type()
+    # Implicit Grant
+    elif grant_type == 'implicit':
+        return OAuth2ErrorHandler.error_unsupported_grant_type()
+    # Client Credentials
+    elif grant_type == 'client_credentials':
+        return OAuth2ErrorHandler.error_unsupported_grant_type()
+    # Client Credentials Grant
+    elif grant_type == 'password':
+        scope = request.params.get('scope', None)  # Optional
+        username = request.params.get('username', None)
+        if username is None:
+            return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
+        else:
+            return password_authorization(request, username, None, scope, expires_in, bypass=True)
+    else:
+        return OAuth2ErrorHandler.error_unsupported_grant_type()

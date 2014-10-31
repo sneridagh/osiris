@@ -16,14 +16,17 @@ def legacy_oauth_factory(handler, registry):
 
             response = handler(request)
 
-            if '/token' in request.url and is_legacy_request:
-                body = json.loads(response.body)
-                body['oauth_token'] = body['access_token']
-                body['fresh'] = False
-                del body['access_token']
-                del body['token_type']
-                del body['expires_in']
-                response.body = json.dumps(body)
+            if is_legacy_request:
+                try:
+                    body = json.loads(response.body)
+                except:
+                    pass
+                else:
+                    body['oauth_token'] = body.pop('access_token')
+                    body['fresh'] = False
+                    body.pop('token_type')
+                    body.pop('expires_in')
+                    response.body = json.dumps(body)
             return response
 
     return legacy_oauth_tween
