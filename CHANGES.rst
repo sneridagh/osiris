@@ -1,11 +1,11 @@
 ChangeLog
 =========
 
-1.5 (unreleased)
+1.5 (2014-11-25)
 ----------------
 
-- Nothing changed yet.
-
+* Add bypassed token endpoint [Carles Bruguera]
+* Add legacy support as a mock tween [Carles Bruguera]
 
 1.4 (2014-05-26)
 ----------------
