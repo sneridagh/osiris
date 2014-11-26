@@ -21,9 +21,9 @@ def includeme(config):
     db = settings.get('osiris.store.db', 'osiris')
     collection = settings.get('osiris.store.collection', 'tokens')
 
-    mongodb_auth_enabled = settings.get('osiris.mongodb.auth')
+    mongodb_auth_enabled = asbool(settings.get('osiris.mongodb.auth'))
     mongodb_authdb = settings.get('osiris.mongodb.authdb')
-    mongodb_username = settings.get('osiris.mongodb.sername')
+    mongodb_username = settings.get('osiris.mongodb.username')
     mongodb_password = settings.get('osiris.mongodb.password')
 
     enable_cluster = asbool(settings.get('osiris.mongodb.cluster', False))
@@ -82,7 +82,10 @@ class MongoDBStore(TokenStore):
 
     @reify
     def _conn(self):
-        """The MongoDB connection, cached for this call"""
+        """
+            The MongoDB connection, cached for this call.
+            Returns the database object.
+        """
         try:
             if not self.enable_cluster:
                 db_conn = MongoClient(self.host, self.port, slave_okay=False)
@@ -92,21 +95,23 @@ class MongoDBStore(TokenStore):
                                                 use_greenlets=self.use_greenlets)
         except ConnectionFailure:
             raise Exception('Unable to connect to MongoDB')
-        conn = db_conn[self.db]
 
         # Authenticate to mongodb if auth is enabled
+
         if self.auth:
             mongodb_auth_db = self.authdb if self.authdb else self.db
             # If we have valid username and password, authorize on
             # specified database
             if self.username and self.password:
-                auth_db = conn[mongodb_auth_db]
+                auth_db = db_conn[mongodb_auth_db]
                 auth_db.authenticate(self.username, self.password)
 
-        if self.collection not in conn.collection_names():
-            conn.create_collection(self.collection)
+        db = db_conn[self.db]
 
-        return conn
+        if self.collection not in db.collection_names():
+            db.create_collection(self.collection)
+
+        return db
 
     @handle_reconnects
     def retrieve(self, **kwargs):
