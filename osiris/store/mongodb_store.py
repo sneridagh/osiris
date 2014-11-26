@@ -21,6 +21,11 @@ def includeme(config):
     db = settings.get('osiris.store.db', 'osiris')
     collection = settings.get('osiris.store.collection', 'tokens')
 
+    mongodb_auth_enabled = settings.get('osiris.mongodb.auth')
+    mongodb_authdb = settings.get('osiris.mongodb.authdb')
+    mongodb_username = settings.get('osiris.mongodb.sername')
+    mongodb_password = settings.get('osiris.mongodb.password')
+
     enable_cluster = asbool(settings.get('osiris.mongodb.cluster', False))
     hosts = settings.get('osiris.mongodb.hosts', 'localhost:27017')
     replica_set = settings.get('osiris.mongodb.replica_set', '')
@@ -29,7 +34,8 @@ def includeme(config):
     store = MongoDBStore(
         host=host, port=port, db=db, collection=collection,
         enable_cluster=enable_cluster, hosts=hosts, replica_set=replica_set,
-        use_greenlets=use_greenlets
+        use_greenlets=use_greenlets, auth=mongodb_auth_enabled,
+        authdb=mongodb_authdb, username=mongodb_username, password=mongodb_password
     )
 
     config.registry.osiris_store = store
@@ -58,7 +64,8 @@ class MongoDBStore(TokenStore):
     """MongoDB Storage for oAuth tokens"""
     def __init__(self, host='localhost', port=27017, db="osiris",
                  collection='tokens', enable_cluster=False, hosts='',
-                 replica_set='', use_greenlets=False):
+                 replica_set='', use_greenlets=False, auth=False,
+                 authdb=None, username=None, password=None):
         self.host = host
         self.port = port
         self.db = db
@@ -67,6 +74,11 @@ class MongoDBStore(TokenStore):
         self.hosts = hosts
         self.replica_set = replica_set
         self.use_greenlets = use_greenlets
+
+        self.auth = auth
+        self.authdb = authdb
+        self.username = username
+        self.password = password
 
     @reify
     def _conn(self):
@@ -82,7 +94,16 @@ class MongoDBStore(TokenStore):
             raise Exception('Unable to connect to MongoDB')
         conn = db_conn[self.db]
 
-        if not self.collection in conn.collection_names():
+        # Authenticate to mongodb if auth is enabled
+        if self.auth:
+            mongodb_auth_db = self.authdb if self.authdb else self.db
+            # If we have valid username and password, authorize on
+            # specified database
+            if self.username and self.password:
+                auth_db = conn[mongodb_auth_db]
+                auth_db.authenticate(self.username, self.password)
+
+        if self.collection not in conn.collection_names():
             conn.create_collection(self.collection)
 
         return conn
