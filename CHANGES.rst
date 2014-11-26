@@ -1,11 +1,10 @@
 ChangeLog
 =========
 
-1.6 (unreleased)
-----------------
+1.5.1 (2014-11-26)
+------------------
 
-- Nothing changed yet.
-
+* Enable authenticated mongodb login [Carles Bruguera]
 
 1.5 (2014-11-25)
 ----------------
