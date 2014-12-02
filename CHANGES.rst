@@ -1,11 +1,10 @@
 ChangeLog
 =========
 
-1.5.2 (unreleased)
+1.5.2 (2014-12-02)
 ------------------
 
-- Nothing changed yet.
-
+* Fix legacy tween responseon invalid_grants [Carles Bruguera]
 
 1.5.1 (2014-11-26)
 ------------------
