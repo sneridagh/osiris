@@ -22,10 +22,11 @@ def legacy_oauth_factory(handler, registry):
                 except:
                     pass
                 else:
-                    body['oauth_token'] = body.pop('access_token')
-                    body['fresh'] = False
-                    body.pop('token_type')
-                    body.pop('expires_in')
+                    if response.status_int in [200, 201]:
+                        body['oauth_token'] = body.pop('access_token', '')
+                        body['fresh'] = False
+                    body.pop('token_type', None)
+                    body.pop('expires_in', None)
                     response.body = json.dumps(body)
             return response
 
