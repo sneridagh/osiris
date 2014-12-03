@@ -24,6 +24,29 @@ else:
     from pyramid_ldap import get_ldap_connector
 
 
+# Patch to disable requests logging on gevent
+import inspect
+
+
+def marmoset_patch(old, new, extra_globals={}):
+    g = old.func_globals
+    g.update(extra_globals)
+    c = inspect.getsource(new)
+    exec c in g
+    old.im_func.func_code = g[new.__name__].func_code
+
+
+def log_request(self):
+    pass
+
+try:
+    from gevent.pywsgi import WSGIHandler
+except:
+    pass
+else:
+    marmoset_patch(WSGIHandler.log_request, log_request)
+
+
 def default_setup(config):
     from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
