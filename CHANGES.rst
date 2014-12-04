@@ -1,11 +1,10 @@
 ChangeLog
 =========
 
-1.5.3 (unreleased)
+1.5.3 (2014-12-04)
 ------------------
 
-- Nothing changed yet.
-
+* Prevent logging of requests within gevent [Carles Bruguera]
 
 1.5.2 (2014-12-02)
 ------------------
