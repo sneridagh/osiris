@@ -42,6 +42,7 @@ class osirisTests(unittest.TestCase):
         self.assertFalse('expires_in' in response)
         self.assertTrue(response.get('error'), 'invalid_grant')
         self.assertEqual(resp.content_type, 'application/json')
+
     def test_check_token_endpoint(self):
         payload = {"grant_type": "password", "username": "testuser", "password": "test", 'client_id': 'MAX'}
         resp = self.testapp.post('/token', payload, status=200)

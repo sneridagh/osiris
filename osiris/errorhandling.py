@@ -57,7 +57,7 @@ class OAuth2ErrorHandler(object):
                     error_description="")
 
     @staticmethod
-    def error_invalid_grant():
+    def error_invalid_grant(description=""):
         """
            The provided authorization grant (e.g., authorization code, resource
            owner credentials) or refresh token is invalid, expired, revoked,
@@ -65,7 +65,7 @@ class OAuth2ErrorHandler(object):
            or was issued to another client.
         """
         error_response = dict(error='invalid_grant',
-                              error_description="")
+                              error_description=description)
 
         return JSONHTTPBadRequest(error_response)
 

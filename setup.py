@@ -33,7 +33,7 @@ setup(name='osiris',
       install_requires=requires,
       tests_require=requires + ['WebTest', 'WSGIProxy2'],
       extras_require={
-          'test': ['WebTest', 'WSGIProxy2'],
+          'test': ['WebTest', 'WSGIProxy2', 'pyramid_ldap'],
           'ldap': ['pyramid_ldap', ],
       },
       entry_points="""
