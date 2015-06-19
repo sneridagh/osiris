@@ -1,11 +1,11 @@
 ChangeLog
 =========
 
-1.5.4 (unreleased)
+1.5.4 (2015-06-19)
 ------------------
 
-- Nothing changed yet.
-
+* Don't issue token for unknown user on bypass [Carles Bruguera]
+* Refactor authentication code with a facade OsirisConnector class [Carles Bruguera]
 
 1.5.3 (2014-12-04)
 ------------------
