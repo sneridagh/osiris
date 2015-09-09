@@ -31,6 +31,12 @@ class OsirisConnector(object):
         """
         pass
 
+    def normalize_username(self, username):
+        """
+            Normalizes the username to lower case by default.
+        """
+        return username.lower()
+
 
 class LdapConnector(OsirisConnector):
 
@@ -42,7 +48,8 @@ class LdapConnector(OsirisConnector):
         from osiris import get_ldap_connector
         self.ldap = get_ldap_connector(self.request)
 
-    def user_exists(self, userid):
+    def user_exists(self, username):
+        userid = self.normalize_username(username)
         with self.ldap.manager.connection(self.ldap.manager.bind, self.ldap.manager.passwd) as conn:
             search_id = conn.search(
                 'cn={userid},{base}'.format(
@@ -56,7 +63,8 @@ class LdapConnector(OsirisConnector):
             return True
 
     def check_credentials(self, username, password):
-        return self.ldap.authenticate(username, password)
+        userid = self.normalize_username(username)
+        return self.ldap.authenticate(userid, password)
 
 
 class WhoConnector(OsirisConnector):
@@ -67,7 +75,8 @@ class WhoConnector(OsirisConnector):
         self.who = policy._getAPI(self.request)
 
     def check_credentials(self, username, password):
-        identity, headers = self.who.login({'login': username,'password': password})
+        userid = self.normalize_username(username)
+        identity, headers = self.who.login({'login': userid, 'password': password})
         return identity
 
 
