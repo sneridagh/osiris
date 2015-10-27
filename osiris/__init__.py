@@ -88,7 +88,9 @@ def default_setup(config):
 
         config.ldap_setup(ldapconfig.get('ldap', 'server'),
                           bind=ldapconfig.get('ldap', 'userbind'),
-                          passwd=ldapconfig.get('ldap', 'password')
+                          passwd=ldapconfig.get('ldap', 'password'),
+                          retry_max=1,
+                          use_pool=False
                           )
 
         config.ldap_set_login_query(base_dn=ldapconfig.get('ldap', 'userbasedn'),
