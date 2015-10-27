@@ -6,6 +6,14 @@ from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.authorization import password_authorization
 
 
+def extract_params(request):
+    if request.content_type == 'application/json':
+        params = request.json
+    else:
+        params = request.params
+    return params
+
+
 @view_config(route_name='default_view',
              request_method='GET',
              http_cache=0)
@@ -25,8 +33,9 @@ def token_endpoint(request):
     implicit grant type (since an access token is issued directly).
     """
     expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
+    params = extract_params(request)
 
-    grant_type = request.params.get('grant_type')
+    grant_type = params.get('grant_type')
 
     # Authorization Code Grant
     if grant_type == 'authorization_code':
@@ -39,9 +48,9 @@ def token_endpoint(request):
         return OAuth2ErrorHandler.error_unsupported_grant_type()
     # Client Credentials Grant
     elif grant_type == 'password':
-        scope = request.params.get('scope', None)  # Optional
-        username = request.params.get('username', None)
-        password = request.params.get('password', None)
+        scope = params.get('scope', None)  # Optional
+        username = params.get('username', None)
+        password = params.get('password', None)
         if username is None:
             return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
         elif password is None:
@@ -64,9 +73,10 @@ def check_token_endpoint(request):
     access to the user's resources, the resource server needs to check if the
     token provided is valid and check if it was issued to the user.
     """
-    access_token = request.params.get('access_token')
-    username = request.params.get('username')
-    scope = request.params.get('scope', None)
+    params = extract_params(request)
+    access_token = params.get('access_token')
+    username = params.get('username')
+    scope = params.get('scope', None)
 
     if username is None:
         return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
@@ -99,8 +109,9 @@ def bypass_token_endpoint(request):
     NOTE:This endpoint MUST be firewalled.
     """
     expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
+    params = extract_params(request)
 
-    grant_type = request.params.get('grant_type')
+    grant_type = params.get('grant_type')
 
     # Authorization Code Grant
     if grant_type == 'authorization_code':
@@ -113,8 +124,8 @@ def bypass_token_endpoint(request):
         return OAuth2ErrorHandler.error_unsupported_grant_type()
     # Client Credentials Grant
     elif grant_type == 'password':
-        scope = request.params.get('scope', None)  # Optional
-        username = request.params.get('username', None)
+        scope = params.get('scope', None)  # Optional
+        username = params.get('username', None)
         if username is None:
             return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
         else:
