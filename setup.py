@@ -13,7 +13,7 @@ requires = ['pyramid',
             'waitress']
 
 setup(name='osiris',
-      version='1.5.5',
+      version='1.5.6.dev0',
       description='Pyramid based oAuth server',
       long_description=README + '\n\n' + CHANGES,
       classifiers=[
