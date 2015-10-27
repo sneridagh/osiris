@@ -1,11 +1,12 @@
 ChangeLog
 =========
 
-1.5.5 (unreleased)
+1.5.5 (2015-10-27)
 ------------------
 
-- Nothing changed yet.
-
+* Accept json content-type requests [Carles Bruguera]
+* Change ldap connection details [Carles Bruguera]
+* By default normalize username to lowercase. [Victor Fernandez de Alba]
 
 1.5.4 (2015-06-19)
 ------------------
