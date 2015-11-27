@@ -5,6 +5,8 @@ from ldap import NO_SUCH_OBJECT
 from pyramid.settings import asbool
 from pyramid.interfaces import IAuthenticationPolicy
 
+from functools import partial
+
 
 class OsirisConnector(object):
     """
@@ -80,14 +82,44 @@ class WhoConnector(OsirisConnector):
         return identity
 
 
+class MultiConnector(object):
+    """
+        Encapsulates method access to multiple connectors, seen as only one conector
+        from the outside world. For each method accessed, iterates trough all connector
+        methods in order
+    """
+    def __init__(self, connectors):
+        self.connectors = connectors
+
+    def _conector_iterator_(self, method_name, *args, **kwargs):
+        """
+            Executes method on all defined connectors until a truish value
+            is found, otherwise returns None.
+        """
+        for connector in self.connectors:
+            method = getattr(connector, method_name)
+            result = method(*args, **kwargs)
+            if result:
+                return result
+
+    def __getattr__(self, method):
+        """
+            Returns _conector_iterator_ method instance with the method
+            parameter set.
+        """
+        return partial(self._conector_iterator_, method)
+
+
 def get_connector(request):
     ldap_enabled = asbool(request.registry.settings.get('osiris.ldap_enabled'))
     who_enabled = asbool(request.registry.settings.get('osiris.who_enabled'))
 
+    connectors = []
+    if who_enabled:
+        connectors.append(WhoConnector(request))
     if ldap_enabled:
-        connector = LdapConnector(request)
-    elif who_enabled:
-        connector = WhoConnector(request)
-    else:
+        connectors.append(LdapConnector(request))
+    if not connectors:
         return None
-    return connector
+
+    return MultiConnector(connectors)
