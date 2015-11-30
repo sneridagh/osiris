@@ -51,18 +51,23 @@ class LdapConnector(OsirisConnector):
         self.ldap = get_ldap_connector(self.request)
 
     def user_exists(self, username):
+        """
+            Search for a user cn on all tree under base_dn.
+        """
         userid = self.normalize_username(username)
         with self.ldap.manager.connection(self.ldap.manager.bind, self.ldap.manager.passwd) as conn:
             search_id = conn.search(
-                'cn={userid},{base}'.format(
-                    userid=userid,
-                    base=self.request.registry.ldap_login_query.base_dn),
-                SCOPE_SUBTREE)
+                self.request.registry.ldap_login_query.base_dn,
+                SCOPE_SUBTREE,
+                'cn={userid}'.format(userid=userid))
             try:
-                conn.result(search_id)
+                result = conn.result(search_id)
             except NO_SUCH_OBJECT:
+                # Only raised when base_dn don't exists
                 return False
-            return True
+            else:
+                # Check if there's any matches.
+                return len(result[1]) > 0
 
     def check_credentials(self, username, password):
         userid = self.normalize_username(username)

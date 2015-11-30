@@ -128,7 +128,10 @@ def bypass_token_endpoint(request):
         username = params.get('username', None)
         if username is None:
             return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
-        else:
-            return password_authorization(request, username, None, scope, expires_in, bypass=True)
+        username = username.strip(' ')
+        if username is '':
+            return OAuth2ErrorHandler.error_invalid_request('Required parameter cannot be empty')
+
+        return password_authorization(request, username, None, scope, expires_in, bypass=True)
     else:
         return OAuth2ErrorHandler.error_unsupported_grant_type()

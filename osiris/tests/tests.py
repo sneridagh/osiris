@@ -40,6 +40,7 @@ class osirisTests(unittest.TestCase):
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
         self.assertEqual(resp.content_type, 'application/json')
 
+
     def test_token_endpoint_json_payload(self):
         # extension allowing with "application/json"
         testurl = '/token'
@@ -65,6 +66,17 @@ class osirisTests(unittest.TestCase):
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
         self.assertEqual(resp.content_type, 'application/json')
+
+    def test_token_endpoint_empty_password(self):
+        # extension allowing with "application/json"
+        testurl = '/token'
+        payload = {
+            'grant_type': 'password',
+            'username': 'testuser',
+            'scope': 'widgetcli',
+            'password': ''
+        }
+        self.testapp.post(testurl, json.dumps(payload), status=400, headers={'Content-Type': 'application/json'})
 
     def test_token_with_scope(self):
         # Allow pass the arguments via standard post payload
