@@ -1,11 +1,12 @@
 ChangeLog
 =========
 
-1.5.6 (unreleased)
+1.5.6 (2015-12-17)
 ------------------
 
-- Nothing changed yet.
-
+* Fix empty username bug [Carles Bruguera]
+* Fix query to check user existence [Carles Bruguera]
+* Use all defined connectors [Carles Bruguera]
 
 1.5.5 (2015-10-27)
 ------------------
