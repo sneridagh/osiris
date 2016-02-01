@@ -10,6 +10,7 @@ requires = ['pyramid',
             'pyramid_debugtoolbar',
             'pyramid_who',
             'pymongo',
+            'pyjwt',
             'waitress']
 
 setup(name='osiris',

@@ -1,9 +1,11 @@
 from pyramid.view import view_config
-from pyramid.httpexceptions import HTTPOk, HTTPUnauthorized
+from pyramid.httpexceptions import HTTPOk, HTTPUnauthorized, HTTPNoContent
 from pyramid.response import Response
-from osiris.appconst import ACCESS_TOKEN_LENGTH
+from osiris.appconst import ACCESS_TOKEN_REGEX
 from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.authorization import password_authorization
+
+import re
 
 
 def extract_params(request):
@@ -32,7 +34,6 @@ def token_endpoint(request):
     endpoint is used with every authorization grant except for the
     implicit grant type (since an access token is issued directly).
     """
-    expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
     params = extract_params(request)
 
     grant_type = params.get('grant_type')
@@ -56,7 +57,7 @@ def token_endpoint(request):
         elif password is None:
             return OAuth2ErrorHandler.error_invalid_request('Required parameter password not found in the request')
         else:
-            return password_authorization(request, username, password, scope, expires_in)
+            return password_authorization(request, username, password, scope)
     else:
         return OAuth2ErrorHandler.error_unsupported_grant_type()
 
@@ -82,7 +83,7 @@ def check_token_endpoint(request):
         return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
     elif access_token is None:
         return OAuth2ErrorHandler.error_invalid_request('Required parameter access_token not found in the request')
-    elif len(access_token) != ACCESS_TOKEN_LENGTH:
+    elif re.match(ACCESS_TOKEN_REGEX, access_token, re.IGNORECASE) is None:
         return OAuth2ErrorHandler.error_invalid_request('Required parameter not valid found in the request')
 
     storage = request.registry.osiris_store
@@ -135,3 +136,29 @@ def bypass_token_endpoint(request):
         return password_authorization(request, username, None, scope, expires_in, bypass=True)
     else:
         return OAuth2ErrorHandler.error_unsupported_grant_type()
+
+
+@view_config(name='revoke',
+             renderer='json',
+             request_method='POST',
+             http_cache=0)
+def revoke_token_endpoint(request):
+    params = extract_params(request)
+    access_token = params.get('access_token')
+    username = params.get('username')
+
+    if username is None:
+        return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
+    elif access_token is None:
+        return OAuth2ErrorHandler.error_invalid_request('Required parameter access_token not found in the request')
+    elif len(access_token) != ACCESS_TOKEN_LENGTH:
+        return OAuth2ErrorHandler.error_invalid_request('Required parameter not valid found in the request')
+
+    storage = request.registry.osiris_store
+    deleted = storage.delete(token=access_token)
+    if deleted:
+        return HTTPNoContent()
+    else:
+        return HTTPUnauthorized()
+
+    return HTTPUnauthorized()

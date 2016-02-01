@@ -123,19 +123,14 @@ class MongoDBStore(TokenStore):
             return None
 
     @handle_reconnects
-    def store(self, token, username, scope, expires_in):
+    def store(self, token, username, scope, expires):
         data = {}
         try:
             data['username'] = username
             data['token'] = token
             data['scope'] = scope
             data['issued_at'] = datetime.datetime.utcnow()
-            if expires_in == '0':
-                data['expire_time'] = 0
-            else:
-                data['expire_time'] = datetime.datetime.utcnow() + \
-                    datetime.timedelta(seconds=int(expires_in))
-
+            data['expire_time'] = expires
             self._conn[self.collection].insert(data)
 
         except OperationFailure:

@@ -1,10 +1,11 @@
 from pyramid.httpexceptions import HTTPInternalServerError
 from osiris.errorhandling import OAuth2ErrorHandler
-from osiris.generator import generate_token
+import jwt
 from osiris.connector import get_connector
+from datetime import datetime, timedelta
 
 
-def password_authorization(request, username, password, scope, expires_in, bypass=False):
+def password_authorization(request, username, password, scope, bypass=False):
 
     connector = get_connector(request)
     error_description = ''
@@ -33,19 +34,34 @@ def password_authorization(request, username, password, scope, expires_in, bypas
         return dict(access_token=issued.get('token'),
                     token_type='bearer',
                     scope=issued.get('scope'),
-                    expires_in=issued.get('expire_time')
+                    expires=issued.get('expire_time')
                     )
     else:
+        token_duration = int(request.registry.settings.get('osiris.jwt.expiry', 0))
+        token_secret = request.registry.settings.get('osiris.jwt.secret', 'secret')
+        token_algorithm = request.registry.settings.get('osiris.jwt.algorithm', 'HS256')
         # Create and store token
-        token = generate_token()
-        stored = storage.store(token, username, scope, expires_in)
+        token_payload = (
+            {
+                'sub': username,
+            }
+        )
+        if token_duration > 0:
+            token_expiration_time = (datetime.utcnow() + timedelta(seconds=token_duration))
+            token_expiration_timestamp = token_expiration_time.strftime('%s')
+            token_payload['exp'] = token_expiration_timestamp
+        else:
+            token_expiration_time = None
+
+        token = jwt.encode(token_payload, token_secret, algorithm=token_algorithm)
+        stored = storage.store(token, username, scope, token_expiration_time)
 
         # Issue token
         if stored:
             return dict(access_token=token,
                         token_type='bearer',
                         scope=scope,
-                        expires_in=int(expires_in)
+                        expires=token_expiration_timestamp
                         )
         else:
             # If operation error, return a generic server error

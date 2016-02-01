@@ -4,8 +4,6 @@ import os
 from pyramid import testing
 from paste.deploy import loadapp
 
-from osiris.appconst import ACCESS_TOKEN_LENGTH
-
 
 class osirisTests(unittest.TestCase):
     def setUp(self):
@@ -23,7 +21,6 @@ class osirisTests(unittest.TestCase):
         payload = {"grant_type": "password", "username": "testuser", "password": "test", 'client_id': 'MAX'}
         resp = self.testapp.post('/token', payload, status=200)
         response = resp.json
-        self.assertTrue('oauth_token' in response and len(response.get('oauth_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('fresh' in response)
         self.assertFalse('token_type' in response)

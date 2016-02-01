@@ -1,7 +1,6 @@
 import unittest
 from pyramid import testing
 
-from osiris.appconst import ACCESS_TOKEN_LENGTH
 
 LEGACY_URL = 'https://oauth.upc.edu'
 

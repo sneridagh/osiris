@@ -4,7 +4,6 @@ import os
 from pyramid import testing
 from paste.deploy import loadapp
 
-from osiris.appconst import ACCESS_TOKEN_LENGTH
 import json
 
 
@@ -24,7 +23,6 @@ class osirisTests(unittest.TestCase):
         testurl = '/token?grant_type=password&username=testuser&password=test'
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
@@ -34,12 +32,10 @@ class osirisTests(unittest.TestCase):
         payload = {"grant_type": "password", "username": "testuser", "password": "test"}
         resp = self.testapp.post('/token', payload, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
         self.assertEqual(resp.content_type, 'application/json')
-
 
     def test_token_endpoint_json_payload(self):
         # extension allowing with "application/json"
@@ -51,7 +47,6 @@ class osirisTests(unittest.TestCase):
         }
         resp = self.testapp.post(testurl, json.dumps(payload), status=200, headers={'Content-Type': 'application/json'})
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
@@ -61,7 +56,6 @@ class osirisTests(unittest.TestCase):
         payload = {"grant_type": "password", "username": "testuser", "password": "test"}
         resp = self.testapp.post('/token', payload, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
@@ -83,7 +77,6 @@ class osirisTests(unittest.TestCase):
         payload = {"grant_type": "password", "username": "testuser", "password": "test", "scope": "widgetcli"}
         resp = self.testapp.post('/token', payload, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') == 'widgetcli')
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
@@ -234,7 +227,6 @@ class osirisTests(unittest.TestCase):
         testurl = '/token-bypass?grant_type=password&username=testuser&password='
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
@@ -244,7 +236,6 @@ class osirisTests(unittest.TestCase):
         payload = {"grant_type": "password", "username": "testuser"}
         resp = self.testapp.post('/token-bypass', payload, status=200)
         response = resp.json
-        self.assertTrue('access_token' in response and len(response.get('access_token')) == ACCESS_TOKEN_LENGTH)
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
         self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
