@@ -52,6 +52,7 @@ def password_authorization(request, username, password, scope, bypass=False):
             token_payload['exp'] = token_expiration_timestamp
         else:
             token_expiration_time = None
+            token_expiration_timestamp = None
 
         token = jwt.encode(token_payload, token_secret, algorithm=token_algorithm)
         stored = storage.store(token, username, scope, token_expiration_time)
