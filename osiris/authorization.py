@@ -41,13 +41,15 @@ def password_authorization(request, username, password, scope, bypass=False):
         token_secret = request.registry.settings.get('osiris.jwt.secret', 'secret')
         token_algorithm = request.registry.settings.get('osiris.jwt.algorithm', 'HS256')
         # Create and store token
+        issued_at = datetime.utcnow()
         token_payload = (
             {
+                'iat': issued_at,
                 'sub': username,
             }
         )
         if token_duration > 0:
-            token_expiration_time = (datetime.utcnow() + timedelta(seconds=token_duration))
+            token_expiration_time = (issued_at + timedelta(seconds=token_duration))
             token_expiration_timestamp = token_expiration_time.strftime('%s')
             token_payload['exp'] = token_expiration_timestamp
         else:
@@ -55,14 +57,14 @@ def password_authorization(request, username, password, scope, bypass=False):
             token_expiration_timestamp = None
 
         token = jwt.encode(token_payload, token_secret, algorithm=token_algorithm)
-        stored = storage.store(token, username, scope, token_expiration_time)
+        stored = storage.store(token, username, scope, issued_at, token_expiration_time)
 
         # Issue token
         if stored:
             return dict(access_token=token,
                         token_type='bearer',
                         scope=scope,
-                        expires=token_expiration_timestamp
+                        expires=token_expiration_timestamp,
                         )
         else:
             # If operation error, return a generic server error

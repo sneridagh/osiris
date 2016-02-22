@@ -6,6 +6,7 @@ from osiris.errorhandling import OAuth2ErrorHandler
 from osiris.authorization import password_authorization
 
 import re
+from datetime import datetime
 
 
 def extract_params(request):
@@ -84,12 +85,20 @@ def check_token_endpoint(request):
     elif access_token is None:
         return OAuth2ErrorHandler.error_invalid_request('Required parameter access_token not found in the request')
     elif re.match(ACCESS_TOKEN_REGEX, access_token, re.IGNORECASE) is None:
-        return OAuth2ErrorHandler.error_invalid_request('Required parameter not valid found in the request')
+        return OAuth2ErrorHandler.error_invalid_request('Wrong format access_token found in the request')
 
     storage = request.registry.osiris_store
     token_info = storage.retrieve(token=access_token)
     if token_info:
-        if token_info.get('scope') == scope and token_info.get('username') == username:
+        has_valid_scope = token_info.get('scope') == scope
+        has_valid_username = token_info.get('username') == username
+        expire_time = token_info.get('expire_time', None)
+        expired = False if expire_time is None else expire_time < datetime.utcnow()
+
+        if expired:
+            storage.delete(token=access_token)
+
+        if has_valid_scope and has_valid_username and not expired:
             return HTTPOk()
         else:
             return HTTPUnauthorized()
@@ -109,7 +118,6 @@ def bypass_token_endpoint(request):
 
     NOTE:This endpoint MUST be firewalled.
     """
-    expires_in = request.registry.settings.get('osiris.tokenexpiry', 0)
     params = extract_params(request)
 
     grant_type = params.get('grant_type')
@@ -133,7 +141,7 @@ def bypass_token_endpoint(request):
         if username is '':
             return OAuth2ErrorHandler.error_invalid_request('Required parameter cannot be empty')
 
-        return password_authorization(request, username, None, scope, expires_in, bypass=True)
+        return password_authorization(request, username, None, scope, bypass=True)
     else:
         return OAuth2ErrorHandler.error_unsupported_grant_type()
 
@@ -151,8 +159,6 @@ def revoke_token_endpoint(request):
         return OAuth2ErrorHandler.error_invalid_request('Required parameter username not found in the request')
     elif access_token is None:
         return OAuth2ErrorHandler.error_invalid_request('Required parameter access_token not found in the request')
-    elif len(access_token) != ACCESS_TOKEN_LENGTH:
-        return OAuth2ErrorHandler.error_invalid_request('Required parameter not valid found in the request')
 
     storage = request.registry.osiris_store
     deleted = storage.delete(token=access_token)

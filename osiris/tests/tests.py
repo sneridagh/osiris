@@ -5,6 +5,7 @@ from pyramid import testing
 from paste.deploy import loadapp
 
 import json
+import time
 
 
 class osirisTests(unittest.TestCase):
@@ -25,7 +26,7 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
 
         # Allow pass the arguments via standard post payload
@@ -34,7 +35,7 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
 
     def test_token_endpoint_json_payload(self):
@@ -49,7 +50,7 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
 
         # Allow pass the arguments via standard post payload
@@ -58,7 +59,7 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
 
     def test_token_endpoint_empty_password(self):
@@ -79,7 +80,7 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') == 'widgetcli')
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
 
     def test_token_invalid_or_not_enough_arguments(self):
@@ -196,7 +197,7 @@ class osirisTests(unittest.TestCase):
 
     def test_check_token_endpoint_guessed_token(self):
         # POST payload
-        payload = {"access_token": "qwe1235rwersdgasdfghjkyuiyuihfgh", "username": "testuser2"}
+        payload = {"access_token": "qwe1235rwe.rsdgasdfghjkyu.iyuihfgh", "username": "testuser2"}
         self.testapp.post('/checktoken', payload, status=401)
 
     def test_check_token_not_enough_arguments(self):
@@ -217,19 +218,53 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         access_token = response.get('access_token')
 
+        import time
+        time.sleep(1)
+
         testurl = '/token?grant_type=password&username=testuser&password=test'
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
         self.assertEqual(access_token, response.get('access_token'))
+
+    def test_revoke_token(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        testurl = '/revoke?username=testuser&access_token=' + access_token
+        resp = self.testapp.post(testurl, status=204)
+
+        testurl = '/checktoken?access_token=%s&username=testuser&scope=widgetcli' % (str(access_token))
+        self.testapp.post(testurl, status=401)
+
+    def test_different_token_after_revoke(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        revoke_url = '/revoke?username=testuser&access_token=' + access_token
+        resp = self.testapp.post(revoke_url, status=204)
+
+        # Wait at least 1 second for token to be different
+        time.sleep(1)
+
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        new_access_token = response.get('access_token')
+
+        self.assertNotEqual(access_token, new_access_token)
 
     def test_bypass_token_endpoint(self):
         # The standard allows arguments with "application/x-www-form-urlencoded"
         testurl = '/token-bypass?grant_type=password&username=testuser&password='
         resp = self.testapp.post(testurl, status=200)
         response = resp.json
+
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
 
         # Allow pass the arguments via standard post payload
@@ -238,5 +273,67 @@ class osirisTests(unittest.TestCase):
         response = resp.json
         self.assertTrue('token_type' in response and response.get('token_type') == 'bearer')
         self.assertTrue('scope' in response and response.get('scope') is None)
-        self.assertTrue('expires_in' in response and response.get('expires_in') == 0)
+        self.assertTrue('expires' in response and response.get('expires') is None)
         self.assertEqual(resp.content_type, 'application/json')
+
+
+class osirisExpiryTests(unittest.TestCase):
+    def setUp(self):
+        conf_dir = os.path.dirname(__file__)
+        self.app = loadapp('config:test_expiry.ini', relative_to=conf_dir)
+        from webtest import TestApp
+        self.testapp = TestApp(self.app)
+
+    def tearDown(self):
+        self.app.registry.osiris_store._conn.drop_collection(self.app.registry.settings.get('osiris.store.collection'))
+        testing.tearDown()
+
+    def test_expired_token(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test&scope=widgetcli'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        testurl = '/checktoken?access_token=%s&username=testuser&scope=widgetcli' % (str(access_token))
+        resp = self.testapp.post(testurl, status=200)
+
+        time.sleep(3)
+        self.testapp.post(testurl, status=401)
+
+    def test_expired_token_deleted_after_check(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test&scope=widgetcli'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        time.sleep(3)
+        testurl = '/checktoken?access_token=%s&username=testuser&scope=widgetcli' % (str(access_token))
+        self.testapp.post(testurl, status=401)
+        db_token = self.testapp.app.registry.osiris_store.retrieve(token=access_token)
+        self.assertEqual(db_token, None)
+
+    def test_expired_token_without_check(self):
+        testurl = '/token?grant_type=password&username=testuser&password=test&scope=widgetcli'
+        resp = self.testapp.post(testurl, status=200)
+        response = resp.json
+        access_token = response.get('access_token')
+
+        # Wait at most 90 seconds for the token to disappear by itself
+        # Mongodb TTL indexes expires dopcuments relative to issued_at each 60 seconds,
+        # So if 90 seconds later the document still exists, give up an fail
+
+        print
+        print "Waiting for Mongodb to expiry document based on TTL (90 sec. max)"
+        waited = 0
+        disappeared = False
+        while waited < 90 and not disappeared:
+            import sys
+            sys.stdout.write('.')
+            sys.stdout.flush()
+            db_token = self.testapp.app.registry.osiris_store.retrieve(token=access_token)
+            disappeared = db_token is None
+            waited += 0.5
+            time.sleep(0.5)
+        print
+        print 'Waited {} seconds to TTL expiry'.format(waited)
+        self.assertEqual(db_token, None)

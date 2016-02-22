@@ -20,6 +20,7 @@ def includeme(config):
     port = int(settings.get('osiris.store.port', '27017'))
     db = settings.get('osiris.store.db', 'osiris')
     collection = settings.get('osiris.store.collection', 'tokens')
+    expire_ttl = int(settings.get('osiris.jwt.expiry', 0))
 
     mongodb_auth_enabled = asbool(settings.get('osiris.mongodb.auth'))
     mongodb_authdb = settings.get('osiris.mongodb.authdb')
@@ -34,7 +35,7 @@ def includeme(config):
     store = MongoDBStore(
         host=host, port=port, db=db, collection=collection,
         enable_cluster=enable_cluster, hosts=hosts, replica_set=replica_set,
-        use_greenlets=use_greenlets, auth=mongodb_auth_enabled,
+        use_greenlets=use_greenlets, auth=mongodb_auth_enabled, expire_ttl=expire_ttl,
         authdb=mongodb_authdb, username=mongodb_username, password=mongodb_password
     )
 
@@ -65,7 +66,7 @@ class MongoDBStore(TokenStore):
     def __init__(self, host='localhost', port=27017, db="osiris",
                  collection='tokens', enable_cluster=False, hosts='',
                  replica_set='', use_greenlets=False, auth=False,
-                 authdb=None, username=None, password=None):
+                 authdb=None, username=None, password=None, expire_ttl=0):
         self.host = host
         self.port = port
         self.db = db
@@ -74,6 +75,7 @@ class MongoDBStore(TokenStore):
         self.hosts = hosts
         self.replica_set = replica_set
         self.use_greenlets = use_greenlets
+        self.expire_ttl = expire_ttl
 
         self.auth = auth
         self.authdb = authdb
@@ -111,6 +113,18 @@ class MongoDBStore(TokenStore):
         if self.collection not in db.collection_names():
             db.create_collection(self.collection)
 
+        create_index = True
+        indexes = db[self.collection].index_information()
+        if 'issued_at_1' in indexes:
+            create_index
+            current_ttl = indexes['issued_at_1'].get('expireAfterSeconds', 0)
+            if current_ttl != self.expire_ttl:
+                db[self.collection].drop_index('issued_at_1')
+            else:
+                create_index = False
+
+        if create_index and self.expire_ttl:
+            db[self.collection].create_index([('issued_at', 1)], **{'expireAfterSeconds': self.expire_ttl})
         return db
 
     @handle_reconnects
@@ -123,13 +137,13 @@ class MongoDBStore(TokenStore):
             return None
 
     @handle_reconnects
-    def store(self, token, username, scope, expires):
+    def store(self, token, username, scope, issued, expires):
         data = {}
         try:
             data['username'] = username
             data['token'] = token
             data['scope'] = scope
-            data['issued_at'] = datetime.datetime.utcnow()
+            data['issued_at'] = issued
             data['expire_time'] = expires
             self._conn[self.collection].insert(data)
 
