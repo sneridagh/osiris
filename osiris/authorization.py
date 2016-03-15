@@ -33,7 +33,7 @@ def password_authorization(request, username, password, scope, expires_in, bypas
         return dict(access_token=issued.get('token'),
                     token_type='bearer',
                     scope=issued.get('scope'),
-                    expires_in=issued.get('expire_time')
+                    expires_in=issued.get('expire_time').isoformat()
                     )
     else:
         # Create and store token
